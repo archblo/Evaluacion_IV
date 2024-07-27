@@ -8,6 +8,7 @@ function App() {
   const [clave3, setClave3] = useState('true');
   const [clave4, setClave4] = useState('');
   const [editandoReceta, setEditandoReceta] = useState(null);
+  const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
 
   useEffect(() => {
     const recetasAlmacenadas = JSON.parse(localStorage.getItem("recetas") || "[]");
@@ -21,13 +22,14 @@ function App() {
 
   const handleAgregarReceta = () => {
     if (recetas.find(receta => receta.clave1 === clave1)) {
-      alert("El número ya existe. No se puede duplicar la clave.");
+      setMensaje({ texto: "El número ya existe. No se puede duplicar la clave.", tipo: 'alert-danger' });
       return;
     }
     const nuevaReceta = { clave1, clave2, clave3: clave3 === 'true', clave4 };
     setRecetas(prev => {
       const nuevoArreglo = [...prev, nuevaReceta];
       localStorage.setItem("recetas", JSON.stringify(nuevoArreglo));
+      setMensaje({ texto: "Receta agregada con éxito.", tipo: 'alert-success' });
       return nuevoArreglo;
     });
     setClave1('');
@@ -37,11 +39,14 @@ function App() {
   };
 
   const handleEliminarReceta = (clave1) => {
-    setRecetas(prev => {
-      const resultadosEliminados = prev.filter(receta => receta.clave1 !== clave1);
-      localStorage.setItem("recetas", JSON.stringify(resultadosEliminados));
-      return resultadosEliminados;
-    });
+    if (window.confirm("¿Estás seguro de que deseas eliminar esta receta?")) {
+      setRecetas(prev => {
+        const resultadosEliminados = prev.filter(receta => receta.clave1 !== clave1);
+        localStorage.setItem("recetas", JSON.stringify(resultadosEliminados));
+        setMensaje({ texto: "Receta eliminada con éxito.", tipo: 'alert-success' });
+        return resultadosEliminados;
+      });
+    }
   };
 
   const handleEditarReceta = (receta) => {
@@ -58,6 +63,7 @@ function App() {
         receta.clave1 === editandoReceta.clave1 ? { ...receta, clave1, clave2, clave3: clave3 === 'true', clave4 } : receta
       );
       localStorage.setItem("recetas", JSON.stringify(recetasActualizadas));
+      setMensaje({ texto: "Receta actualizada con éxito.", tipo: 'alert-success' });
       return recetasActualizadas;
     });
     setEditandoReceta(null);
@@ -79,7 +85,15 @@ function App() {
     <div className="container mt-4">
       <div className="d-flex justify-content-center">
         <div className="border border-primary p-5 rounded">
-          <h1 className="text-center mb-4">¡Ingrese Su Receta Aqui!</h1>
+          <h1 className="text-center mb-4">¡Ingrese Su Receta Aquí!</h1>
+          {mensaje.texto && (
+            <div className={`alert ${mensaje.tipo} alert-dismissible fade show`} role="alert">
+              {mensaje.texto}
+              <button type="button" className="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+          )}
           <form onSubmit={(e) => e.preventDefault()}>
             <div className="form-group">
               <label htmlFor="clave1">Número de Receta</label>
@@ -132,8 +146,8 @@ function App() {
                   <td>{receta.clave3 ? 'Sí' : 'No'}</td>
                   <td>{receta.clave4}</td>
                   <td>
-                    <button type="button" className="btn btn-warning btn-sm mr-2 mb-5" onClick={() => handleEditarReceta(receta)}>Editar</button>
-                    <button type="button" className="btn btn-danger btn-sm mt-2 mb-5" onClick={() => handleEliminarReceta(receta.clave1)}>Eliminar</button>
+                    <button type="button" className="btn btn-warning btn-sm mr-2 mt-2" onClick={() => handleEditarReceta(receta)}>Editar</button>
+                    <button type="button" className="btn btn-danger btn-sm mt-4" onClick={() => handleEliminarReceta(receta.clave1)}>Eliminar</button>
                   </td>
                 </tr>
               ))}
